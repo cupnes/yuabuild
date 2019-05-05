@@ -1,4 +1,4 @@
-all: build/poiboot/poiboot.efi build/yuaos/kernel.bin build/yuaos/apps/serial_echoback/e.serial_echoback
+all: build/poiboot/poiboot.efi build/yuakernel/kernel.bin build/yuaapps/serial_echoback/e.serial_echoback
 
 PHONY += setup
 setup: build
@@ -13,38 +13,44 @@ run: deploy
 PHONY += clean
 clean:
 	sudo chroot build make -C poiboot clean
-	sudo chroot build make -C yuaos clean
-	sudo chroot build make -C yuaos/apps/serial_echoback clean
+	sudo chroot build make -C yuakernel clean
+	sudo chroot build make -C yuaapps/serial_echoback clean
 
 # build
 build:
 	wget http://yuma.ohgami.jp/build.tar.xz
 	wget http://yuma.ohgami.jp/build.tar.xz.sha256
 	sha256sum -c build.tar.xz.sha256
-	tar Jxf build.tar.xz
+	sudo tar Jxf build.tar.xz
 	cd build && git clone https://github.com/cupnes/poiboot.git
-	cd build && git clone https://github.com/cupnes/yuaos.git
+	cd build && git clone https://github.com/cupnes/yuakernel.git
+	cd build && git clone https://github.com/cupnes/yuaapps.git
 
 # poiboot
 build/fs/efi/boot/bootx64.efi: build/poiboot/poiboot.efi
 	mkdir -p build/fs/efi/boot
 	cp $< $@
 build/poiboot/poiboot.efi:
+	cd build/poiboot && git checkout master && git pull
 	sudo chroot build make -C poiboot
 build/fs/poiboot.conf:
 	cp build/poiboot/poiboot_default.conf $@
 
-# yuaos
-build/fs/kernel.bin: build/yuaos/kernel.bin
+# yuakernel
+build/fs/kernel.bin: build/yuakernel/kernel.bin
 	cp $< $@
-build/yuaos/kernel.bin:
-	sudo chroot build make -C yuaos
+build/yuakernel/kernel.bin:
+	cd build/yuakernel && git checkout master && git pull
+	sudo chroot build make -C yuakernel
+
+# yuaapps
 build/fs/fs.img: init
-	build/yuaos/tools/create_fs.sh init
+	build/yuaapps/tools/create_fs.sh init
 	cp fs.img $@
-init: build/yuaos/apps/serial_echoback/e.serial_echoback
+init: build/yuaapps/serial_echoback/e.serial_echoback
 	cp $< $@
-build/yuaos/apps/serial_echoback/e.serial_echoback:
-	sudo chroot build make -C yuaos/apps/serial_echoback
+build/yuaapps/serial_echoback/e.serial_echoback:
+	cd build/yuaapps && git checkout master && git pull
+	sudo chroot build make -C yuaapps/serial_echoback
 
 .PHONY: $(PHONY)
