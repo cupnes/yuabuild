@@ -23,7 +23,7 @@ build:
 	sha256sum -c build.tar.xz.sha256
 	tar Jxf build.tar.xz
 	cd build && git clone https://github.com/cupnes/poiboot.git
-	cd build && git clone -b next https://github.com/cupnes/yuaos.git
+	cd build && git clone https://github.com/cupnes/yuaos.git
 
 # poiboot
 build/fs/efi/boot/bootx64.efi: build/poiboot/poiboot.efi
